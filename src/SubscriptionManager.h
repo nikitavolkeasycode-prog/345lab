@@ -32,7 +32,7 @@ struct DateRange {
 
 // A single category total, used by TopCategories.
 struct CategoryTotal {
-    Category category;
+    Category category = Category::kOther;
     double total_monthly = 0.0;
     std::size_t count = 0;
 };
