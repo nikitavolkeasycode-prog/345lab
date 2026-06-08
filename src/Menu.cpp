@@ -6,6 +6,7 @@
 #include "FileIO.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <iomanip>
@@ -115,6 +116,46 @@ double Menu::ReadPositiveDouble(const std::string& prompt) {
     }
 }
 
+int Menu::ReadIntInRange(const std::string& prompt, int lo, int hi) {
+    while (true) {
+        const int v = ReadInt(prompt);
+        if (v >= lo && v <= hi) return v;
+        std::cout << "  [ошибка] введите число от " << lo << " до " << hi << "\n";
+    }
+}
+
+bool Menu::IsValidIsoDate(const std::string& s) {
+    if (s.size() != 10) return false;
+    if (s[4] != '-' || s[7] != '-') return false;
+    auto is_digit = [](char c) { return c >= '0' && c <= '9'; };
+    for (size_t i : {0u, 1u, 2u, 3u, 5u, 6u, 8u, 9u}) {
+        if (!is_digit(s[i])) return false;
+    }
+    int year  = (s[0] - '0') * 1000 + (s[1] - '0') * 100 +
+                (s[2] - '0') * 10  + (s[3] - '0');
+    int month = (s[5] - '0') * 10  + (s[6] - '0');
+    int day   = (s[8] - '0') * 10  + (s[9] - '0');
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    static constexpr std::array<int, 12> kDaysInMonth = {
+        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int max_day = kDaysInMonth[month - 1];
+    if (month == 2) {
+        const bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+        if (leap) max_day = 29;
+    }
+    return day <= max_day;
+}
+
+std::string Menu::ReadIsoDate(const std::string& prompt) {
+    while (true) {
+        auto s = ReadLine(prompt);
+        if (IsValidIsoDate(s)) return s;
+        std::cout << "  [ошибка] дата должна быть в формате YYYY-MM-DD "
+                     "и быть реальной (например, 2026-07-15)\n";
+    }
+}
+
 void Menu::PrintTable(const std::vector<Subscription>& items) const {
     out_ << '\n';
     const std::string header =
@@ -163,52 +204,41 @@ int Menu::MainMenuChoice() {
 
 bool Menu::HandleAdd() {
     out_ << "\n--- Добавление подписки ---\n";
-    try {
-        const auto id    = ReadNonEmpty("ID: ");
-        if (mgr_.HasId(id)) {
-            out_ << "  [ошибка] подписка с таким ID уже существует\n";
-            return false;
-        }
-        const auto name  = ReadNonEmpty("Название сервиса: ");
 
-        out_ << "Категория (1-Развлечения, 2-Софт, 3-Обучение, "
-                "4-Коммунальные, 5-Другое): ";
-        int cat_choice = ReadInt("");
-        if (cat_choice < 1 || cat_choice > 5) {
-            out_ << "  [ошибка] неверная категория\n";
-            return false;
-        }
-        const auto cat = static_cast<Category>(cat_choice - 1);
-
-        const auto cost = ReadPositiveDouble("Стоимость за период, ₽: ");
-
-        out_ << "Цикл оплаты (1-daily, 2-weekly, 3-monthly, "
-                "4-quarterly, 5-yearly): ";
-        int cyc_choice = ReadInt("");
-        if (cyc_choice < 1 || cyc_choice > 5) {
-            out_ << "  [ошибка] неверный цикл\n";
-            return false;
-        }
-        const auto cyc = static_cast<BillingCycle>(cyc_choice - 1);
-
-        const auto date = ReadNonEmpty("Дата следующей оплаты (YYYY-MM-DD): ");
-
-        out_ << "Статус (1-active, 2-paused, 3-cancelled) [по умолч. 1]: ";
-        int st_choice = ReadInt("");
-        if (st_choice == 0) st_choice = 1;
-        if (st_choice < 1 || st_choice > 3) {
-            out_ << "  [ошибка] неверный статус\n";
-            return false;
-        }
-        const auto st = static_cast<Status>(st_choice - 1);
-
-        mgr_.Add(Subscription(id, name, cat, cost, cyc, date, st));
-        out_ << "  [ok] подписка добавлена\n";
-        return true;
-    } catch (const std::invalid_argument& e) {
-        out_ << "  [ошибка валидации] " << e.what() << "\n";
-        return false;
+    // ID: must be unique. We re-prompt on collision instead of
+    // throwing the user back to the main menu.
+    std::string id;
+    while (true) {
+        id = ReadNonEmpty("ID: ");
+        if (!mgr_.HasId(id)) break;
+        out_ << "  [ошибка] подписка с таким ID уже существует, "
+                "выберите другой\n";
     }
+
+    const auto name = ReadNonEmpty("Название сервиса: ");
+
+    const int cat_choice = ReadIntInRange(
+        "Категория (1-Развлечения, 2-Софт, 3-Обучение, "
+        "4-Коммунальные, 5-Другое): ", 1, 5);
+    const auto cat = static_cast<Category>(cat_choice - 1);
+
+    const auto cost = ReadPositiveDouble("Стоимость за период, ₽: ");
+
+    const int cyc_choice = ReadIntInRange(
+        "Цикл оплаты (1-daily, 2-weekly, 3-monthly, "
+        "4-quarterly, 5-yearly): ", 1, 5);
+    const auto cyc = static_cast<BillingCycle>(cyc_choice - 1);
+
+    const auto date = ReadIsoDate(
+        "Дата следующей оплаты (YYYY-MM-DD): ");
+
+    const int st_choice = ReadIntInRange(
+        "Статус (1-active, 2-paused, 3-cancelled): ", 1, 3);
+    const auto st = static_cast<Status>(st_choice - 1);
+
+    mgr_.Add(Subscription(id, name, cat, cost, cyc, date, st));
+    out_ << "  [ok] подписка добавлена\n";
+    return true;
 }
 
 bool Menu::HandleEdit() {

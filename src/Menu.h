@@ -52,7 +52,10 @@ class Menu {
     static std::string ReadLine(const std::string& prompt);
     static std::string ReadNonEmpty(const std::string& prompt);
     static int         ReadInt(const std::string& prompt);
+    static int         ReadIntInRange(const std::string& prompt, int lo, int hi);
     static double      ReadPositiveDouble(const std::string& prompt);
+    static std::string ReadIsoDate(const std::string& prompt);
+    static bool        IsValidIsoDate(const std::string& s);
 
     SubscriptionManager& mgr_;
     std::istream& in_;
