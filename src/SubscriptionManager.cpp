@@ -239,15 +239,22 @@ std::vector<Subscription> SubscriptionManager::DueWithinDays(
 }
 
 std::vector<CategoryTotal> SubscriptionManager::TopCategories(std::size_t n) const {
-    std::unordered_map<int, CategoryTotal> agg;
+    // Aggregate (total_monthly, count) keyed by category. The pair is
+    // trivially default-constructible, so we sidestep any MSVC
+    // issues around initialising a struct that mixes a scoped-enum
+    // with default-initialised scalar members in an unordered_map.
+    std::unordered_map<Category, std::pair<double, std::size_t>> agg;
     for (const auto& s : items_) {
         if (s.status() != Status::kActive) continue;
-        auto& bucket = agg[static_cast<int>(s.category())];
-        bucket.category = s.category();
-        bucket.total_monthly += s.NormalisedMonthlyCost();
-        bucket.count += 1;
+        auto& bucket = agg[s.category()];
+        bucket.first  += s.NormalisedMonthlyCost();
+        bucket.second += 1;
     }
-    std::vector<CategoryTotal> vec(agg.begin(), agg.end());
+    std::vector<CategoryTotal> vec;
+    vec.reserve(agg.size());
+    for (const auto& kv : agg) {
+        vec.push_back({kv.first, kv.second.first, kv.second.second});
+    }
     std::sort(vec.begin(), vec.end(),
               [](const CategoryTotal& a, const CategoryTotal& b) {
                   if (a.total_monthly != b.total_monthly) {
