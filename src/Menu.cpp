@@ -252,79 +252,82 @@ bool Menu::HandleEdit() {
     out_ << "  текущие данные:\n";
     PrintTable({*current});
 
-    try {
-        auto name = ReadLine("Новое название (Enter — не менять): ");
-        if (name.empty()) name = current->service_name();
+    // Name: keep on empty input.
+    auto name = ReadLine("Новое название (Enter — не менять): ");
+    if (name.empty()) name = current->service_name();
 
+    // Category: keep on empty input, validate otherwise.
+    Category cat = current->category();
+    while (true) {
         out_ << "Категория (1-Развлечения, 2-Софт, 3-Обучение, "
                 "4-Коммунальные, 5-Другое) [Enter — не менять]: ";
-        std::string cat_s;
-        std::getline(std::cin, cat_s);
-        Category cat = current->category();
-        if (!cat_s.empty()) {
-            int c = std::stoi(cat_s);
-            if (c < 1 || c > 5) {
-                out_ << "  [ошибка] неверная категория\n";
-                return false;
-            }
-            cat = static_cast<Category>(c - 1);
-        }
+        std::string s; std::getline(std::cin, s);
+        if (s.empty()) break;
+        try {
+            const int c = std::stoi(s);
+            if (c >= 1 && c <= 5) { cat = static_cast<Category>(c - 1); break; }
+        } catch (...) {}
+        out_ << "  [ошибка] неверная категория\n";
+    }
 
-        auto cost_s = ReadLine("Новая стоимость (Enter — не менять): ");
-        double cost = current->monthly_cost();
-        if (!cost_s.empty()) {
-            try {
-                std::size_t pos = 0;
-                cost = std::stod(cost_s, &pos);
-                if (pos != cost_s.size() || !(cost > 0.0)) {
-                    out_ << "  [ошибка] стоимость должна быть > 0\n";
-                    return false;
-                }
-            } catch (...) {
-                out_ << "  [ошибка] некорректная стоимость\n";
-                return false;
+    // Cost: keep on empty, re-prompt on bad.
+    double cost = current->monthly_cost();
+    while (true) {
+        out_ << "Новая стоимость (Enter — не менять): ";
+        std::string s; std::getline(std::cin, s);
+        if (s.empty()) break;
+        try {
+            std::size_t pos = 0;
+            const double v = std::stod(s, &pos);
+            if (pos == s.size() && std::isfinite(v) && v > 0.0) {
+                cost = v;
+                break;
             }
-        }
+        } catch (...) {}
+        out_ << "  [ошибка] введите положительное число\n";
+    }
 
+    // Cycle.
+    BillingCycle cyc = current->cycle();
+    while (true) {
         out_ << "Цикл (1-daily, 2-weekly, 3-monthly, 4-quarterly, "
                 "5-yearly) [Enter — не менять]: ";
-        std::string cyc_s;
-        std::getline(std::cin, cyc_s);
-        BillingCycle cyc = current->cycle();
-        if (!cyc_s.empty()) {
-            int c = std::stoi(cyc_s);
-            if (c < 1 || c > 5) {
-                out_ << "  [ошибка] неверный цикл\n";
-                return false;
-            }
-            cyc = static_cast<BillingCycle>(c - 1);
-        }
+        std::string s; std::getline(std::cin, s);
+        if (s.empty()) break;
+        try {
+            const int c = std::stoi(s);
+            if (c >= 1 && c <= 5) { cyc = static_cast<BillingCycle>(c - 1); break; }
+        } catch (...) {}
+        out_ << "  [ошибка] неверный цикл\n";
+    }
 
-        auto date = ReadLine("Новая дата (YYYY-MM-DD, Enter — не менять): ");
-        if (date.empty()) date = current->next_payment_date();
+    // Date.
+    std::string date = current->next_payment_date();
+    while (true) {
+        out_ << "Новая дата (YYYY-MM-DD, Enter — не менять): ";
+        std::string s; std::getline(std::cin, s);
+        if (s.empty()) break;
+        if (IsValidIsoDate(s)) { date = s; break; }
+        out_ << "  [ошибка] дата должна быть в формате YYYY-MM-DD\n";
+    }
 
+    // Status.
+    Status st = current->status();
+    while (true) {
         out_ << "Статус (1-active, 2-paused, 3-cancelled) "
                 "[Enter — не менять]: ";
-        std::string st_s;
-        std::getline(std::cin, st_s);
-        Status st = current->status();
-        if (!st_s.empty()) {
-            int c = std::stoi(st_s);
-            if (c < 1 || c > 3) {
-                out_ << "  [ошибка] неверный статус\n";
-                return false;
-            }
-            st = static_cast<Status>(c - 1);
-        }
-
-        Subscription updated(current->id(), name, cat, cost, cyc, date, st);
-        mgr_.Update(updated);
-        out_ << "  [ok] подписка обновлена\n";
-        return true;
-    } catch (const std::invalid_argument& e) {
-        out_ << "  [ошибка валидации] " << e.what() << "\n";
-        return false;
+        std::string s; std::getline(std::cin, s);
+        if (s.empty()) break;
+        try {
+            const int c = std::stoi(s);
+            if (c >= 1 && c <= 3) { st = static_cast<Status>(c - 1); break; }
+        } catch (...) {}
+        out_ << "  [ошибка] неверный статус\n";
     }
+
+    mgr_.Update(Subscription(current->id(), name, cat, cost, cyc, date, st));
+    out_ << "  [ok] подписка обновлена\n";
+    return true;
 }
 
 bool Menu::HandleDelete() {
