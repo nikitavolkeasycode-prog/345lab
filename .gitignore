@@ -1,0 +1,50 @@
+# Build artefacts
+build/
+out/
+cmake-build-*/
+
+# MSVC / VS
+.vs/
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.vcxproj.user
+*.pdb
+*.ilk
+*.obj
+*.exe
+*.lib
+*.pch
+ipch/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+Win32/
+ARM/
+ARM64/
+
+# GCC / Clang
+*.o
+*.a
+*.so
+*.dylib
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Local data dumps (keep the sample file, ignore runtime ones)
+data/subscriptions.db
+data/subscriptions.db-journal
+data/subscriptions.db-shm
+data/subscriptions.db-wal
+data/subscriptions.txt.tmp

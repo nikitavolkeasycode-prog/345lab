@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{C2E0B5C0-7A6B-4E1A-9F2A-1C9B5C0A1A11}</ProjectGuid>
+    <RootNamespace>SubscriptionTracker</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup>
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ItemGroup>
+    <ClInclude Include="src\FileIO.h" />
+    <ClInclude Include="src\IRepository.h" />
+    <ClInclude Include="src\Menu.h" />
+    <ClInclude Include="src\Subscription.h" />
+    <ClInclude Include="src\SubscriptionManager.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\FileIO.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Menu.cpp" />
+    <ClCompile Include="src\Subscription.cpp" />
+    <ClCompile Include="src\SubscriptionManager.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <!-- Copy sample data next to the binary after build. -->
+  <Target Name="CopyData" AfterTargets="Build">
+    <ItemGroup>
+      <_Data Include="data\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_Data)"
+          DestinationFolder="$(OutDir)data\%(RecursiveDir)" />
+  </Target>
+</Project>

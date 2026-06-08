@@ -1,0 +1,19 @@
+# id|service_name|category|monthly_cost|billing_cycle|next_payment_date|status
+# The default monthly_cost field stores the cost PER BILLING CYCLE
+# (so a 1200₽ yearly subscription has monthly_cost=1200, cycle=yearly).
+# The "₽/мес" column in the UI normalises that to a per-month figure.
+sub-001|Яндекс Плюс|software|299|monthly|2026-07-15|active
+sub-002|Spotify|entertainment|169|monthly|2026-07-12|active
+sub-003|NetFlix|entertainment|899|monthly|2026-07-20|active
+sub-004|ChatGPT Plus|software|1500|monthly|2026-07-05|active
+sub-005|Stepik Pro|education|299|monthly|2026-07-08|active
+sub-006|Coursera Plus|education|4990|yearly|2026-12-01|active
+sub-007|Notion Plus|software|480|monthly|2026-07-18|active
+sub-008|ЖКУ|Коммунальные|4500|monthly|2026-07-25|active
+sub-009|VK Музыка|entertainment|169|monthly|2026-06-30|paused
+sub-010|Adobe Creative Cloud|software|6480|yearly|2026-09-10|active
+sub-011|YouTube Premium|entertainment|299|monthly|2026-07-02|active
+sub-012|DomClick Premium|other|350|monthly|2026-07-22|paused
+sub-013|Notion Calendar|other|1500|yearly|2027-01-15|active
+sub-014|Amediateka|entertainment|649|monthly|2026-07-19|cancelled
+sub-015|Skillbox|education|3000|monthly|2026-07-09|active
